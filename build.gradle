@@ -1,0 +1,79 @@
+// 프로젝트에서 사용할 플러그인 설정
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+// 프로젝트 기본 정보 설정
+group = 'com.zerobase'
+version = '0.0.1-SNAPSHOT'
+
+// Java 버전 설정
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+// 의존성 설정 구성
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+// 의존성을 가져올 저장소 설정
+repositories {
+    mavenCentral()
+}
+
+// 프로젝트 의존성 설정
+dependencies {
+    // Spring Boot 핵심 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Lombok 설정
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 개발 도구
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 데이터베이스 의존성
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // JWT 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // 기타 유틸리티
+    implementation 'org.jetbrains:annotations:24.0.0'
+
+    // 테스트 관련 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// 소스 세트 설정
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+}
+
+// 테스트 태스크 설정
+tasks.named('test') {
+    useJUnitPlatform()
+}
