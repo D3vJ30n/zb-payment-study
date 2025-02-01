@@ -18,7 +18,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "store")
+@Table(name = "store", indexes = {
+    @Index(name = "idx_store_name", columnList = "name"),
+    @Index(name = "idx_store_location", columnList = "location"),
+    @Index(name = "idx_store_owner", columnList = "owner_id")
+})
 public class Store {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +34,7 @@ public class Store {
     @Column(nullable = false)
     private String location;        // 매장 위치
 
-    @Column(nullable = false)
+    @Column(length = 1000)
     private String description;     // 매장 설명
 
     /**
@@ -38,7 +42,7 @@ public class Store {
      * 지연 로딩(LAZY)을 사용하여 필요할 때만 소유자 정보를 로드
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "owner_id")
     private Member owner;           // 매장 소유자(Member 엔티티 참조)
 
     @Column(nullable = false)

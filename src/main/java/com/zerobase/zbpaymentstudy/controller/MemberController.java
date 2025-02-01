@@ -40,7 +40,7 @@ public class MemberController {
      * - 실패: 400 Bad Request (잘못된 입력) 또는 500 Internal Server Error (서버 오류)
      * @throws IllegalArgumentException 이메일 중복 등 유효성 검증 실패 시
      */
-    @PostMapping("/signup")
+    @PostMapping("sign-up")
     public ResponseEntity<ApiResponse<MemberDto>> signUp(
         @RequestBody @Valid MemberSignUpDto signUpDto
     ) {

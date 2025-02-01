@@ -1,6 +1,7 @@
 package com.zerobase.zbpaymentstudy.domain.store.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 매장 등록 요청 시 사용되는 데이터 전송 객체(DTO)
@@ -13,7 +14,7 @@ public record StoreRegisterDto(
     @NotBlank(message = "매장 위치는 필수입니다")
     String location,        // 등록할 매장의 위치
 
-    @NotBlank(message = "매장 설명은 필수입니다")
+    @Size(max = 1000, message = "매장 설명은 1000자를 초과할 수 없습니다")
     String description      // 등록할 매장의 상세 설명
 ) {
     /**

@@ -1,5 +1,6 @@
 package com.zerobase.zbpaymentstudy.common;
 
+import com.zerobase.zbpaymentstudy.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,4 +94,23 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
         return createErrorResponse("예기치 않은 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, true);
     }
+
+    /**
+     * BusinessException 예외 처리
+     *
+     * @param e 발생한 BusinessException
+     * @return ResponseEntity<ApiResponse < ?>> 에러 응답
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<?>> handleBusinessException(BusinessException e) {
+        log.error("Business Exception: {}", e.getMessage());
+        return ResponseEntity
+            .status(e.getErrorCode().getStatus())
+            .body(new ApiResponse<>("ERROR", e.getMessage(), null));
+    }
+
+    // 다음 예외들에 대한 처리 추가 필요:
+    // - DataIntegrityViolationException
+    // - HttpMessageNotReadableException
+    // - AccessDeniedException
 }

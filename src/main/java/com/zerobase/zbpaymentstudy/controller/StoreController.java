@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/stores")
+@RequestMapping("/api/v1/stores")
 @RequiredArgsConstructor
 public class StoreController {
 
