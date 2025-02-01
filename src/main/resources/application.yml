@@ -1,9 +1,9 @@
 spring:
   datasource:
     # MySQL 데이터베이스 연결 설정
-    url: jdbc:mysql://192.168.219.101:3306/zb-payment-study?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8 # 데이터베이스 접속 URL
-    username: root # 데이터베이스 접속 사용자명
-    password: 6188 # 데이터베이스 접속 비밀번호
+    url: ${DB_URL} # 데이터베이스 접속 URL
+    username: ${DB_USERNAME} # 데이터베이스 접속 사용자명
+    password: ${DB_PASSWORD} # 데이터베이스 접속 비밀번호
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스명
 
   jpa:
