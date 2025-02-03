@@ -5,19 +5,19 @@
 
 이 프로젝트는 매장 예약 및 리뷰 관리를 위한 REST API 서비스입니다.
 
-- **파트너(점장)**는 매장을 등록하고 예약을 관리할 수 있습니다.
-- **일반 사용자**는 매장을 검색하고 예약한 후 리뷰를 작성할 수 있습니다.
+- 파트너(점장)는 매장을 등록하고 예약을 관리할 수 있습니다.
+- 일반 사용자는 매장을 검색하고 예약한 후 리뷰를 작성할 수 있습니다.
 
 ---
 
 ## ⚙️ 개발 환경
 
-- **언어**: Java 17
-- **프레임워크**: Spring Boot 3.3.7
-- **데이터베이스**: MySQL 8.0
-- **빌드 도구**: Gradle
-- **테스트 프레임워크**: JUnit5
-- **기타 라이브러리**: Spring Data JPA, QueryDSL
+- 언어: Java 17
+- 프레임워크: Spring Boot 3.3.7
+- 데이터베이스: MySQL 8.0
+- 빌드 도구: Gradle
+- 테스트 프레임워크: JUnit5
+- 기타 라이브러리: Spring Data JPA, QueryDSL
 
 ---
 
@@ -25,24 +25,24 @@
 
 ### 1️⃣ 회원가입 및 매장 등록
 
-- **JWT 기반 인증**: 회원가입 및 로그인 기능 제공
-- **회원 권한 관리**: USER(일반 사용자)와 PARTNER(파트너)로 권한 구분
-- **매장 관리**: 파트너 회원은 매장을 등록/수정/삭제할 수 있습니다
+- JWT 기반 인증: 회원가입 및 로그인 기능 제공
+- 회원 권한 관리: USER(일반 사용자)와 PARTNER(파트너)로 권한 구분
+- 매장 관리: 파트너 회원은 매장을 등록/수정/삭제할 수 있습니다
     - 매장 정보: 매장명, 위치, 설명 등
 
 ### 2️⃣ 매장 검색 및 예약
 
-- **동적 검색**: 다양한 조건으로 매장을 검색할 수 있습니다
-- **페이징 및 정렬**: 매장 목록을 페이징 및 정렬하여 제공
-- **예약 시스템**: 회원 전용 예약 시스템 제공
+- 동적 검색: 다양한 조건으로 매장을 검색할 수 있습니다
+- 페이징 및 정렬: 매장 목록을 페이징 및 정렬하여 제공
+- 예약 시스템: 회원 전용 예약 시스템 제공
     - 예약 상태: PENDING(대기 중), APPROVED(승인됨), REJECTED(거절됨)
 
 ### 3️⃣ 체크인 및 리뷰
 
-- **체크인**: 예약 10분 전에 체크인 가능
-- **키오스크 인증**: 체크인 시 인증 코드 검증
-- **리뷰 작성**: 이용 후 리뷰 작성 가능
-- **예약 승인/거절**: 점장이 예약을 승인하거나 거절할 수 있습니다
+- 체크인: 예약 10분 전에 체크인 가능
+- 키오스크 인증: 체크인 시 인증 코드 검증
+- 리뷰 작성: 이용 후 리뷰 작성 가능
+- 예약 승인/거절: 점장이 예약을 승인하거나 거절할 수 있습니다
 
 ---
 
@@ -50,25 +50,25 @@
 
 ### 회원 API
 
-- **회원가입**: `POST /api/members/signup`
-- **로그인**: `POST /api/members/login`
+- 회원가입: `POST /api/members/signup`
+- 로그인: `POST /api/members/login`
 
 ### 매장 API
 
-- **매장 등록**: `POST /api/stores`
-- **매장 목록 조회**: `GET /api/stores`
-- **매장 상세 조회**: `GET /api/stores/{id}`
+- 매장 등록: `POST /api/stores`
+- 매장 목록 조회: `GET /api/stores`
+- 매장 상세 조회: `GET /api/stores/{id}`
 
 ### 예약 API
 
-- **예약 생성**: `POST /api/reservations`
-- **예약 상태 변경**: `PATCH /api/reservations/{id}`
-- **체크인**: `POST /api/reservations/check-in`
+- 예약 생성: `POST /api/reservations`
+- 예약 상태 변경: `PATCH /api/reservations/{id}`
+- 체크인: `POST /api/reservations/check-in`
 
 ### 리뷰 API
 
-- **리뷰 작성**: `POST /api/reviews`
-- **매장별 리뷰 조회**: `GET /api/reviews/stores/{id}`
+- 리뷰 작성: `POST /api/reviews`
+- 매장별 리뷰 조회: `GET /api/reviews/stores/{id}`
 
 ---
 
@@ -101,10 +101,10 @@ src
 
 시스템은 다음과 같은 계층 구조로 설계되었습니다.
 
-- **Presentation Layer**: REST API 엔드포인트 제공 및 요청/응답 처리
-- **Business Layer**: 핵심 비즈니스 로직 및 트랜잭션 관리
-- **Persistence Layer**: 데이터베이스 연산 및 데이터 접근
-- **Domain Layer**: 비즈니스 엔티티 및 규칙 정의
+- Presentation Layer: REST API 엔드포인트 제공 및 요청/응답 처리
+- Business Layer: 핵심 비즈니스 로직 및 트랜잭션 관리
+- Persistence Layer: 데이터베이스 연산 및 데이터 접근
+- Domain Layer: 비즈니스 엔티티 및 규칙 정의
 
 ### 예약 프로세스 흐름
 
@@ -120,16 +120,16 @@ src
 
 ### 주요 엔티티
 
-- **Member**: 사용자 정보 관리 (일반 사용자/파트너)
-- **Store**: 매장 정보 관리
-- **Reservation**: 예약 정보 및 상태 관리
-- **Review**: 리뷰 정보 관리
+- Member: 사용자 정보 관리 (일반 사용자/파트너)
+- Store: 매장 정보 관리
+- Reservation: 예약 정보 및 상태 관리
+- Review: 리뷰 정보 관리
 
 ### 핵심 관계
 
-- **Member(1) - Store(N)**: 파트너는 여러 매장을 소유할 수 있음
-- **Store(1) - Reservation(N)**: 매장은 여러 예약을 가질 수 있음
-- **Reservation(1) - Review(1)**: 하나의 예약당 하나의 리뷰 작성 가능
+- Member(1) - Store(N): 파트너는 여러 매장을 소유할 수 있음
+- Store(1) - Reservation(N): 매장은 여러 예약을 가질 수 있음
+- Reservation(1) - Review(1): 하나의 예약당 하나의 리뷰 작성 가능
 
 ---
 
