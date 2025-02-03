@@ -73,4 +73,9 @@ public class Reservation {
      * 예약 정보 수정 시간
      */
     private LocalDateTime updatedAt;
+
+    public void setCheckedInAt(LocalDateTime checkInTime) {
+        this.checkInTime = checkInTime;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

@@ -40,13 +40,14 @@ public class ReviewController {
     /**
      * 리뷰 수정 API
      */
-    @PutMapping("/{reviewId}")
+    @PatchMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewDto>> updateReview(
+        @AuthenticationPrincipal String memberEmail,
         @PathVariable Long reviewId,
-        @RequestBody @Valid ReviewUpdateDto updateDto
+        @Valid @RequestBody ReviewUpdateDto updateDto
     ) {
         log.info("리뷰 수정 요청 - reviewId: {}", reviewId);
-        return ResponseEntity.ok(reviewService.updateReview(reviewId, updateDto));
+        return ResponseEntity.ok(reviewService.updateReview(memberEmail, reviewId, updateDto));
     }
 
     /**
@@ -54,10 +55,11 @@ public class ReviewController {
      */
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
+        @AuthenticationPrincipal String memberEmail,
         @PathVariable Long reviewId
     ) {
         log.info("리뷰 삭제 요청 - reviewId: {}", reviewId);
-        return ResponseEntity.ok(reviewService.deleteReview(reviewId));
+        return ResponseEntity.ok(reviewService.deleteReview(memberEmail, reviewId));
     }
 
     /**

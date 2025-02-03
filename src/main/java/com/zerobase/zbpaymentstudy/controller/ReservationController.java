@@ -73,4 +73,17 @@ public class ReservationController {
         log.info("예약 목록 조회 요청 - criteria: {}, pageable: {}", criteria, pageable);
         return ResponseEntity.ok(reservationService.getReservations(criteria, pageable));
     }
+
+    /**
+     * 예약 처리 API
+     */
+    @PatchMapping("/{reservationId}/handle")
+    public ResponseEntity<ApiResponse<ReservationDto>> handleReservation(
+        @AuthenticationPrincipal String ownerEmail,
+        @PathVariable Long reservationId,
+        @RequestParam boolean approved
+    ) {
+        log.info("예약 처리 요청 - reservationId: {}, approved: {}", reservationId, approved);
+        return ResponseEntity.ok(reservationService.handleReservation(ownerEmail, reservationId, approved));
+    }
 } 

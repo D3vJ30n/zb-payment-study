@@ -34,4 +34,16 @@ public class ApiResponse<T> {
      * 실패 시: null
      */
     private T data;
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>("SUCCESS", message, data);
+    }
+
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>("ERROR", message, null);
+    }
+
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return new ApiResponse<>("ERROR", message, data);
+    }
 }

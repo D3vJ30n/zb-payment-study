@@ -7,11 +7,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface StoreRepositoryCustom {
     /**
-     * 주어진 검색 조건과 페이징 정보로 매장을 검색
+     * 매장 검색 메서드
      *
-     * @param criteria 검색 조건
+     * @param criteria 검색 조건 (키워드, 위치 등)
      * @param pageable 페이징 정보
      * @return 검색된 매장 목록
      */
     Page<Store> searchStores(StoreSearchCriteria criteria, Pageable pageable);
-} 
+}
+

@@ -54,24 +54,29 @@ public class StoreServiceImpl implements StoreService {
     public ApiResponse<StoreDto> registerStore(String ownerEmail, StoreRegisterDto registerDto) {
         try {
             Member owner = memberRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
             if (owner.getRole() != MemberRole.PARTNER) {
-                throw new BusinessException(ErrorCode.NOT_PARTNER_MEMBER);
+                throw new BusinessException(ErrorCode.NOT_A_PARTNER);
             }
 
             Store store = Store.builder()
                 .name(registerDto.name())
                 .location(registerDto.location())
                 .description(registerDto.description())
+                .latitude(registerDto.latitude())
+                .longitude(registerDto.longitude())
                 .owner(owner)
+                .averageRating(0.0)
+                .reviewCount(0)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
             Store savedStore = storeRepository.save(store);
             log.info("매장 등록 완료 - storeName: {}, ownerEmail: {}", store.getName(), ownerEmail);
-            return new ApiResponse<>("SUCCESS", "매장이 등록되었습니다.", StoreDto.from(savedStore));
+            
+            return new ApiResponse<>("SUCCESS", "매장이 성공적으로 등록되었습니다.", StoreDto.from(savedStore));
         } catch (BusinessException e) {
             log.warn("매장 등록 실패 - {}", e.getMessage());
             throw e;

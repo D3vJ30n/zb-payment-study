@@ -68,31 +68,33 @@ public class ReviewServiceImpl implements ReviewService {
      * 기존 리뷰를 수정하는 메서드
      * 리뷰 존재 여부를 확인하고 내용을 업데이트
      *
+     * @param memberEmail 수정 요청자의 이메일
      * @param reviewId 수정할 리뷰의 ID
-     * @param dto      수정할 리뷰 정보를 담은 DTO
+     * @param dto 수정할 리뷰 정보
      * @return 수정된 리뷰 정보를 포함한 API 응답
      * @throws BusinessException 리뷰를 찾을 수 없거나 수정 권한이 없는 경우
      */
     @Override
-    public ApiResponse<ReviewDto> updateReview(Long reviewId, ReviewUpdateDto dto) {
+    @Transactional
+    public ApiResponse<ReviewDto> updateReview(String memberEmail, Long reviewId, ReviewUpdateDto dto) {
         try {
             Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+
+            // 리뷰 작성자만 수정 가능하도록 검증
+            if (!review.getReservation().getMember().getEmail().equals(memberEmail)) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED_REVIEW_UPDATE);
+            }
 
             review.setRating(dto.rating());
             review.setContent(dto.content());
             review.setUpdatedAt(LocalDateTime.now());
 
             Review updatedReview = reviewRepository.save(review);
-            log.info("리뷰 수정 완료 - reviewId: {}", reviewId);
-
             return new ApiResponse<>("SUCCESS", "리뷰가 수정되었습니다.", ReviewDto.from(updatedReview));
         } catch (BusinessException e) {
             log.warn("리뷰 수정 실패 - {}", e.getMessage());
             throw e;
-        } catch (Exception e) {
-            log.error("리뷰 수정 중 오류 발생", e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -100,26 +102,31 @@ public class ReviewServiceImpl implements ReviewService {
      * 리뷰를 삭제하는 메서드
      * 리뷰 존재 여부를 확인하고 삭제 처리
      *
+     * @param memberEmail 삭제 요청자의 이메일
      * @param reviewId 삭제할 리뷰의 ID
      * @return 삭제 결과를 포함한 API 응답
      * @throws BusinessException 리뷰를 찾을 수 없거나 삭제 권한이 없는 경우
      */
     @Override
-    public ApiResponse<Void> deleteReview(Long reviewId) {
+    @Transactional
+    public ApiResponse<Void> deleteReview(String memberEmail, Long reviewId) {
         try {
             Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
 
-            reviewRepository.delete(review);
-            log.info("리뷰 삭제 완료 - reviewId: {}", reviewId);
+            // 리뷰 작성자 또는 매장 관리자인지 확인
+            boolean isReviewWriter = review.getReservation().getMember().getEmail().equals(memberEmail);
+            boolean isStoreOwner = review.getReservation().getStore().getOwner().getEmail().equals(memberEmail);
 
+            if (!isReviewWriter && !isStoreOwner) {
+                throw new BusinessException(ErrorCode.UNAUTHORIZED_REVIEW_DELETE);
+            }
+
+            reviewRepository.delete(review);
             return new ApiResponse<>("SUCCESS", "리뷰가 삭제되었습니다.", null);
         } catch (BusinessException e) {
             log.warn("리뷰 삭제 실패 - {}", e.getMessage());
             throw e;
-        } catch (Exception e) {
-            log.error("리뷰 삭제 중 오류 발생", e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

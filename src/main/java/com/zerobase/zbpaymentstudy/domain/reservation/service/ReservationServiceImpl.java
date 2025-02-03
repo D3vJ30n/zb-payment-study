@@ -54,10 +54,11 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
             validateReservationTime(dto.reservationTime());
+            validateDuplicateReservation(member, store, dto.reservationTime());
 
             Reservation reservation = Reservation.builder()
-                .store(store)
                 .member(member)
+                .store(store)
                 .reservationTime(dto.reservationTime())
                 .status(ReservationStatus.PENDING)
                 .createdAt(LocalDateTime.now())
@@ -65,15 +66,10 @@ public class ReservationServiceImpl implements ReservationService {
                 .build();
 
             Reservation savedReservation = reservationRepository.save(reservation);
-            log.info("예약 생성 완료 - memberEmail: {}, storeId: {}", memberEmail, dto.storeId());
-
             return new ApiResponse<>("SUCCESS", "예약이 생성되었습니다.", ReservationDto.from(savedReservation));
         } catch (BusinessException e) {
             log.warn("예약 생성 실패 - {}", e.getMessage());
             throw e;
-        } catch (Exception e) {
-            log.error("예약 생성 중 오류 발생", e);
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -85,8 +81,52 @@ public class ReservationServiceImpl implements ReservationService {
      * @throws BusinessException 예약 시간이 현재보다 이전인 경우
      */
     private void validateReservationTime(LocalDateTime reservationTime) {
-        if (reservationTime.isBefore(LocalDateTime.now())) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 현재 시간보다 이전 시간으로 예약 불가
+        if (reservationTime.isBefore(now)) {
             throw new BusinessException(ErrorCode.INVALID_RESERVATION_TIME);
+        }
+
+        // 최소 1시간 전에 예약해야 함
+        if (reservationTime.isBefore(now.plusHours(1))) {
+            throw new BusinessException(ErrorCode.RESERVATION_TOO_CLOSE);
+        }
+
+        // 30일 이후 예약 불가
+        if (reservationTime.isAfter(now.plusDays(30))) {
+            throw new BusinessException(ErrorCode.RESERVATION_TOO_FAR);
+        }
+
+        // 영업 시간(10:00 ~ 22:00) 체크
+        int hour = reservationTime.getHour();
+        if (hour < 10 || hour >= 22) {
+            throw new BusinessException(ErrorCode.OUTSIDE_BUSINESS_HOURS);
+        }
+    }
+
+    private void validateDuplicateReservation(Member member, Store store, LocalDateTime reservationTime) {
+        // 같은 시간대에 중복 예약 체크 (앞뒤 1시간)
+        boolean hasOverlap = reservationRepository.existsByMemberAndReservationTimeBetween(
+            member,
+            reservationTime.minusHours(1),
+            reservationTime.plusHours(1)
+        );
+
+        if (hasOverlap) {
+            throw new BusinessException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+
+        // 매장의 동시간대 예약 수 체크
+        int maxReservationsPerHour = 5; // 시간당 최대 예약 수
+        long reservationCount = reservationRepository.countByStoreAndReservationTimeBetween(
+            store,
+            reservationTime.minusMinutes(30),
+            reservationTime.plusMinutes(30)
+        );
+
+        if (reservationCount >= maxReservationsPerHour) {
+            throw new BusinessException(ErrorCode.STORE_FULLY_BOOKED);
         }
     }
 
@@ -133,18 +173,44 @@ public class ReservationServiceImpl implements ReservationService {
             Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-            validateCheckIn(reservation);
+            validateCheckInTime(reservation);
             validateVerificationCode(reservation, verificationCode);
 
             reservation.setStatus(ReservationStatus.CHECKED_IN);
-            reservation.setCheckInTime(LocalDateTime.now());
+            reservation.setCheckedInAt(LocalDateTime.now());
 
-            Reservation checkedInReservation = reservationRepository.save(reservation);
+            Reservation updatedReservation = reservationRepository.save(reservation);
+
+            // 매장 알림 로직 추가
+            notifyStore(updatedReservation);
+
             return new ApiResponse<>("SUCCESS", "체크인이 완료되었습니다.",
-                ReservationDto.from(checkedInReservation));
+                ReservationDto.from(updatedReservation));
         } catch (BusinessException e) {
+            log.warn("체크인 실패 - {}", e.getMessage());
             throw e;
         }
+    }
+
+    private void validateCheckInTime(Reservation reservation) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime reservationTime = reservation.getReservationTime();
+        
+        // 예약 시간 10분 전부터 체크인 가능
+        if (now.isBefore(reservationTime.minusMinutes(10))) {
+            throw new BusinessException(ErrorCode.EARLY_CHECKIN);
+        }
+        
+        // 예약 시간 30분 후까지만 체크인 가능
+        if (now.isAfter(reservationTime.plusMinutes(30))) {
+            throw new BusinessException(ErrorCode.LATE_CHECKIN);
+        }
+    }
+
+    private void notifyStore(Reservation reservation) {
+        // TODO: 실제 알림 로직 구현 (웹소켓, FCM 등)
+        log.info("매장 알림 전송 - 예약번호: {}, 매장: {}",
+            reservation.getId(), reservation.getStore().getName());
     }
 
     /**
@@ -221,5 +287,47 @@ public class ReservationServiceImpl implements ReservationService {
         if (!"1234".equals(verificationCode)) {  // 임시 코드
             throw new BusinessException(ErrorCode.INVALID_VERIFICATION_CODE);
         }
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<ReservationDto> handleReservation(String ownerEmail, Long reservationId, boolean approved) {
+        try {
+            Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+            // 매장 소유자 검증
+            if (!reservation.getStore().getOwner().getEmail().equals(ownerEmail)) {
+                throw new BusinessException(ErrorCode.INVALID_STORE_OWNER);
+            }
+
+            // 예약 상태 검증
+            if (reservation.getStatus() != ReservationStatus.PENDING) {
+                throw new BusinessException(ErrorCode.INVALID_STATUS_UPDATE);
+            }
+
+            // 승인/거절 처리
+            reservation.setStatus(approved ? ReservationStatus.APPROVED : ReservationStatus.REJECTED);
+            reservation.setUpdatedAt(LocalDateTime.now());
+
+            Reservation updatedReservation = reservationRepository.save(reservation);
+
+            // 예약자에게 알림 발송 (이메일 또는 푸시 알림)
+            notifyReservationResult(updatedReservation);
+
+            String message = approved ? "예약이 승인되었습니다." : "예약이 거절되었습니다.";
+            return new ApiResponse<>("SUCCESS", message, ReservationDto.from(updatedReservation));
+        } catch (BusinessException e) {
+            log.warn("예약 처리 실패 - {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    private void notifyReservationResult(Reservation reservation) {
+        // TODO: 실제 알림 로직 구현
+        log.info("예약 결과 알림 발송 - 예약번호: {}, 상태: {}, 예약자: {}",
+            reservation.getId(),
+            reservation.getStatus(),
+            reservation.getMember().getEmail());
     }
 } 

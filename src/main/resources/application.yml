@@ -1,41 +1,32 @@
 spring:
   datasource:
-    # MySQL 데이터베이스 연결 설정
-    url: ${DB_URL} # 데이터베이스 접속 URL
-    username: ${DB_USERNAME} # 데이터베이스 접속 사용자명
-    password: ${DB_PASSWORD} # 데이터베이스 접속 비밀번호
-    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL JDBC 드라이버 클래스명
-
+    url: jdbc:mysql://192.168.219.101:3306/zb-payment-study?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 6188
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
-    # Hibernate 설정
     hibernate:
-      ddl-auto: update # 데이터베이스 스키마 자동 업데이트 설정
-    show-sql: true # SQL 쿼리 로깅 활성화
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # SQL 쿼리 포맷팅 활성화
-        dialect: org.hibernate.dialect.MySQL8Dialect # MySQL 8 문법 사용
-        jdbc.batch_size: 50
-        order_inserts: true
-        order_updates: true
-        cache:
-          use_second_level_cache: false
-          use_query_cache: false
-          region.factory_class: org.hibernate.cache.ehcache.EhCacheRegionFactory
-        default_batch_fetch_size: 100
-    database-platform: org.hibernate.dialect.MySQL8Dialect # 데이터베이스 플랫폼 지정
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 50
+        connection:
+          provider_disables_autocommit: false
+    database-platform: org.hibernate.dialect.MySQLDialect
 
-# JWT 설정
 jwt:
-  secret: your_jwt_secret_key # 실제 운영 환경에서는 환경 변수로 관리 필요
-  expiration: 86400000 # JWT 토큰 만료시간 (24시간, 밀리초 단위)
+  secret: yourSecretKeyHereMustBeAtLeast32BytesLong
+  expiration: 86400000
 
 management:
   endpoints:
     web:
       exposure:
         include: health,metrics,prometheus
-    # 추가 모니터링 지표 설정 필요
   endpoint:
     health:
       show-details: always

@@ -42,8 +42,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
             .selectFrom(store)
             .leftJoin(store.owner).fetchJoin()
             .where(
-                nameContains(criteria.name()),
-                locationContains(criteria.location()),
+                keywordContains(criteria.keyword()),
                 ownerEmailEquals(criteria.ownerEmail())
             )
             .offset(pageable.getOffset())
@@ -67,47 +66,39 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
      * @return 조건에 맞는 매장의 총 개수
      */
     private long getCount(StoreSearchCriteria criteria) {
-        Long count = queryFactory
+        return queryFactory
             .select(store.count())
             .from(store)
             .where(
-                nameContains(criteria.name()),
-                locationContains(criteria.location()),
+                keywordContains(criteria.keyword()),
                 ownerEmailEquals(criteria.ownerEmail())
             )
             .fetchOne();
-
-        return count != null ? count : 0L;
     }
 
     /**
-     * 매장명으로 검색하는 조건을 생성하는 메서드
+     * 매장명과 위치를 동시에 검색하는 조건을 생성하는 메서드
      *
-     * @param name 검색할 매장명
-     * @return 매장명 포함 여부를 확인하는 BooleanExpression
+     * @param keyword 검색할 키워드
+     * @return 키워드 포함 여부를 확인하는 BooleanExpression
      */
-    private BooleanExpression nameContains(String name) {
-        return StringUtils.hasText(name) ? store.name.contains(name) : null;
-    }
-
-    /**
-     * 매장 위치로 검색하는 조건을 생성하는 메서드
-     *
-     * @param location 검색할 매장 위치
-     * @return 위치 포함 여부를 확인하는 BooleanExpression
-     */
-    private BooleanExpression locationContains(String location) {
-        return StringUtils.hasText(location) ? store.location.contains(location) : null;
+    private BooleanExpression keywordContains(String keyword) {
+        return StringUtils.hasText(keyword) ? 
+            store.name.containsIgnoreCase(keyword)
+                .or(store.location.containsIgnoreCase(keyword)) : 
+            null;
     }
 
     /**
      * 점주 이메일로 검색하는 조건을 생성하는 메서드
      *
-     * @param ownerEmail 검색할 점주 이메일
+     * @param email 검색할 점주 이메일
      * @return 이메일 일치 여부를 확인하는 BooleanExpression
      */
-    private BooleanExpression ownerEmailEquals(String ownerEmail) {
-        return StringUtils.hasText(ownerEmail) ? store.owner.email.eq(ownerEmail) : null;
+    private BooleanExpression ownerEmailEquals(String email) {
+        return StringUtils.hasText(email) ? 
+            store.owner.email.eq(email) : 
+            null;
     }
 
     /**

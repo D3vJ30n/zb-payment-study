@@ -23,23 +23,23 @@ public interface ReviewService {
     ApiResponse<ReviewDto> createReview(String memberEmail, ReviewCreateDto dto);
 
     /**
-     * 기존 리뷰를 수정하는 메서드
-     * 리뷰 작성자만 수정이 가능
+     * 리뷰를 수정하는 메서드
      *
+     * @param memberEmail 수정 요청자의 이메일
      * @param reviewId 수정할 리뷰의 ID
-     * @param dto      수정할 리뷰 정보를 담은 DTO
-     * @return 수정된 리뷰 정보를 포함한 API 응답
+     * @param dto 수정할 리뷰 정보
+     * @return 수정된 리뷰 정보
      */
-    ApiResponse<ReviewDto> updateReview(Long reviewId, ReviewUpdateDto dto);
+    ApiResponse<ReviewDto> updateReview(String memberEmail, Long reviewId, ReviewUpdateDto dto);
 
     /**
      * 리뷰를 삭제하는 메서드
-     * 리뷰 작성자만 삭제가 가능
      *
+     * @param memberEmail 삭제 요청자의 이메일
      * @param reviewId 삭제할 리뷰의 ID
-     * @return 삭제 결과를 포함한 API 응답
+     * @return 삭제 결과
      */
-    ApiResponse<Void> deleteReview(Long reviewId);
+    ApiResponse<Void> deleteReview(String memberEmail, Long reviewId);
 
     /**
      * 특정 매장의 리뷰 목록을 조회하는 메서드

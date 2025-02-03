@@ -37,12 +37,26 @@ public class Store {
     @Column(length = 1000)
     private String description;     // 매장 설명
 
+    @Column(nullable = false)
+    private Double latitude;  // 위도
+
+    @Column(nullable = false)
+    private Double longitude; // 경도
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Double averageRating = 0.0;  // 평균 평점
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer reviewCount = 0;      // 리뷰 수
+
     /**
      * 매장 소유자(점주) 정보
      * 지연 로딩(LAZY)을 사용하여 필요할 때만 소유자 정보를 로드
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "owner_id", nullable = false)
     private Member owner;           // 매장 소유자(Member 엔티티 참조)
 
     @Column(nullable = false)

@@ -52,4 +52,13 @@ public interface ReservationService {
      * @return 검색된 예약 목록과 페이징 정보
      */
     Page<ReservationDto> getReservations(ReservationSearchCriteria criteria, Pageable pageable);
+
+    /**
+     * 예약 승인/거절 처리
+     * @param ownerEmail 매장 소유자 이메일
+     * @param reservationId 예약 ID
+     * @param approved 승인 여부
+     * @return 처리된 예약 정보
+     */
+    ApiResponse<ReservationDto> handleReservation(String ownerEmail, Long reservationId, boolean approved);
 }

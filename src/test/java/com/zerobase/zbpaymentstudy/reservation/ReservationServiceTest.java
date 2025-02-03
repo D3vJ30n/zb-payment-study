@@ -12,8 +12,9 @@ import com.zerobase.zbpaymentstudy.domain.reservation.service.ReservationService
 import com.zerobase.zbpaymentstudy.domain.reservation.type.ReservationStatus;
 import com.zerobase.zbpaymentstudy.domain.store.entity.Store;
 import com.zerobase.zbpaymentstudy.domain.store.repository.StoreRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ReservationServiceTest {
 
     @Autowired
@@ -44,11 +45,26 @@ class ReservationServiceTest {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @BeforeEach
+    @Transactional
+    void setUp() {
+        reservationRepository.deleteAllInBatch();
+        storeRepository.deleteAllInBatch();
+        memberRepository.deleteAllInBatch();
+
+        entityManager.flush();
+        entityManager.clear();
+    }
+
     /**
      * 회원이 정상적으로 예약을 생성할 수 있는지 테스트
      * 예약 생성 후 상태가 PENDING으로 설정되는지 확인
      */
     @Test
+    @Transactional
     @DisplayName("회원이 정상적으로 예약을 생성할 수 있다")
     void createReservation_Success() {
         // given
@@ -73,6 +89,7 @@ class ReservationServiceTest {
      * 체크인 후 상태가 CHECKED_IN으로 변경되는지 확인
      */
     @Test
+    @Transactional
     @DisplayName("예약 시간 10분 전에 체크인할 수 있다")
     void checkIn_Success() {
         // given
@@ -91,6 +108,50 @@ class ReservationServiceTest {
         // then
         assertThat(response.getResult()).isEqualTo("SUCCESS");
         assertThat(response.getData().status()).isEqualTo(ReservationStatus.CHECKED_IN);
+    }
+
+    /**
+     * 점장이 예약을 승인할 수 있다
+     */
+    @Test
+    @Transactional
+    @DisplayName("점장이 예약을 승인할 수 있다")
+    void approveReservation_Success() {
+        // given
+        Member owner = createPartnerMember("owner@test.com");
+        Store store = createStore("테스트 매장", owner);
+        Member customer = createMember("customer@test.com", "고객", "password");
+        Reservation reservation = createPendingReservation(customer, store);
+
+        // when
+        ApiResponse<ReservationDto> response =
+            reservationService.handleReservation(owner.getEmail(), reservation.getId(), true);
+
+        // then
+        assertThat(response.getResult()).isEqualTo("SUCCESS");
+        assertThat(response.getData().status()).isEqualTo(ReservationStatus.APPROVED);
+    }
+
+    /**
+     * 점장이 예약을 거절할 수 있다
+     */
+    @Test
+    @Transactional
+    @DisplayName("점장이 예약을 거절할 수 있다")
+    void rejectReservation_Success() {
+        // given
+        Member owner = createPartnerMember("owner@test.com");
+        Store store = createStore("테스트 매장", owner);
+        Member customer = createMember("customer@test.com", "고객", "password");
+        Reservation reservation = createPendingReservation(customer, store);
+
+        // when
+        ApiResponse<ReservationDto> response =
+            reservationService.handleReservation(owner.getEmail(), reservation.getId(), false);
+
+        // then
+        assertThat(response.getResult()).isEqualTo("SUCCESS");
+        assertThat(response.getData().status()).isEqualTo(ReservationStatus.REJECTED);
     }
 
     /**
@@ -120,14 +181,17 @@ class ReservationServiceTest {
      * @return 생성된 매장 엔티티
      */
     private Store createStore(String name, Member owner) {
-        return storeRepository.save(Store.builder()
+        Store store = Store.builder()
             .name(name)
-            .location("서울시 강남구")
-            .description("테스트 매장입니다")
             .owner(owner)
+            .location("서울시 강남구")
+            .description("테스트 매장")
+            .latitude(37.123456)
+            .longitude(127.123456)
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
-            .build());
+            .build();
+        return storeRepository.save(store);
     }
 
     /**
@@ -147,5 +211,38 @@ class ReservationServiceTest {
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
             .build());
+    }
+
+    /**
+     * 테스트용 대기중인 예약 생성 헬퍼 메서드
+     *
+     * @param member 예약 회원
+     * @param store  예약 매장
+     * @return 생성된 예약 엔티티
+     */
+    private Reservation createPendingReservation(Member member, Store store) {
+        return reservationRepository.save(Reservation.builder()
+            .member(member)
+            .store(store)
+            .reservationTime(LocalDateTime.now().plusDays(1))
+            .status(ReservationStatus.PENDING)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build());
+    }
+
+    /**
+     * 파트너 회원 생성 헬퍼 메서드
+     */
+    private Member createPartnerMember(String email) {
+        Member partner = Member.builder()
+            .email(email)
+            .password("password1234")
+            .name("파트너")
+            .role(MemberRole.PARTNER)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
+        return memberRepository.save(partner);
     }
 }

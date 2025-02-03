@@ -34,6 +34,30 @@ public record StoreDto(
     String description,
 
     /**
+     * 매장 위도
+     * 매장의 위도 정보
+     */
+    Double latitude,
+
+    /**
+     * 매장 경도
+     * 매장의 경도 정보
+     */
+    Double longitude,
+
+    /**
+     * 매장 평균 평점
+     * 매장의 평균 평점
+     */
+    Double averageRating,
+
+    /**
+     * 매장 리뷰 개수
+     * 매장에 작성된 리뷰 개수
+     */
+    Integer reviewCount,
+
+    /**
      * 매장 소유자(점주)의 이메일
      * 매장을 운영하는 점주의 식별 정보
      */
@@ -43,7 +67,13 @@ public record StoreDto(
      * 매장 등록 일시
      * 매장이 시스템에 등록된 날짜와 시간
      */
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+
+    /**
+     * 매장 수정 일시
+     * 매장이 수정된 날짜와 시간
+     */
+    LocalDateTime updatedAt
 ) {
     /**
      * Store 엔티티를 StoreDto로 변환하는 정적 팩토리 메서드
@@ -58,8 +88,13 @@ public record StoreDto(
             store.getName(),
             store.getLocation(),
             store.getDescription(),
+            store.getLatitude(),
+            store.getLongitude(),
+            store.getAverageRating(),
+            store.getReviewCount(),
             store.getOwner().getEmail(),
-            store.getCreatedAt()
+            store.getCreatedAt(),
+            store.getUpdatedAt()
         );
     }
 }

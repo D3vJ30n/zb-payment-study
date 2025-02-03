@@ -8,11 +8,13 @@ import com.zerobase.zbpaymentstudy.domain.store.dto.StoreDto;
 import com.zerobase.zbpaymentstudy.domain.store.dto.StoreRegisterDto;
 import com.zerobase.zbpaymentstudy.domain.store.service.StoreService;
 import com.zerobase.zbpaymentstudy.exception.BusinessException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@TestPropertySource(locations = "classpath:application.yml")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 
 /**
  * 매장 서비스 테스트 클래스
@@ -35,6 +39,14 @@ class StoreServiceTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @BeforeEach
+    void setUp() {
+        memberRepository.deleteAllInBatch();
+    }
 
     /**
      * 매장 등록이 정상적으로 되는지 테스트
@@ -49,7 +61,9 @@ class StoreServiceTest {
         StoreRegisterDto registerDto = new StoreRegisterDto(
             "테스트 매장",
             "서울시 강남구",
-            "테스트 매장입니다"
+            "테스트 매장입니다",
+            37.4967,  // latitude 추가
+            127.0276  // longitude 추가
         );
 
         // when
@@ -58,6 +72,8 @@ class StoreServiceTest {
         // then
         assertThat(response.getResult()).isEqualTo("SUCCESS");
         assertThat(response.getData().name()).isEqualTo("테스트 매장");
+        assertThat(response.getData().latitude()).isEqualTo(37.4967);
+        assertThat(response.getData().longitude()).isEqualTo(127.0276);
     }
 
     /**
@@ -65,6 +81,7 @@ class StoreServiceTest {
      * 파트너가 아닌 회원이 매장 등록 시 BusinessException이 발생하는지 확인
      */
     @Test
+    @Transactional
     @DisplayName("일반 회원은 매장을 등록할 수 없다")
     void registerStore_Fail_NotPartner() {
         // given
@@ -73,7 +90,9 @@ class StoreServiceTest {
         StoreRegisterDto registerDto = new StoreRegisterDto(
             "테스트 매장",
             "서울시 강남구",
-            "테스트 매장입니다"
+            "테스트 매장입니다",
+            37.4967,  // 추가
+            127.0276  // 추가
         );
 
         // when & then
